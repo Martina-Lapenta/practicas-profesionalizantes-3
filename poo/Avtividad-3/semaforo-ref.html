@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Semáforo y Círculo</title>
+  <style>
+    .luzroja { background-color: red; color: white; }
+    .luzamarilla { background-color: yellow; color: black; }
+    .luzverde { background-color: green; color: white; }
+    .luzapagada { background-color: white; color: black; }
+  </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="600" height="150" style="border:1px solid #000000;"></canvas>
+
+<br><br>
+
+<button id="red">LuzRoja</button>
+<button id="yellow">LuzAmarilla</button>
+<button id="green">LuzVerde</button>
+
+<br><br>
+
+<button id="on">Encender</button>
+<button id="off">Apagar</button>
+
+<script>
+  class SemaphoreView {
+    constructor(model) {
+      this._model = model;
+      this._model.addEventListener('changed', () => this.updateView());
+      this.updateView();
+    }
+
+    updateView() {
+      let state = this._model.getModelState();
+      document.getElementById('red').style.backgroundColor = 'white';
+      document.getElementById('yellow').style.backgroundColor = 'white';
+      document.getElementById('green').style.backgroundColor = 'white';
+
+      if (state.red) document.getElementById('red').style.backgroundColor = 'red';
+      if (state.yellow) document.getElementById('yellow').style.backgroundColor = 'yellow';
+      if (state.green) document.getElementById('green').style.backgroundColor = 'green';
+    }
+  }
+
+  class SemaphoreModel extends EventTarget {
+    constructor() {
+      super();
+      this.timer = 0;
+      this.redTime = 4;
+      this.transitionTime = 1;
+      this.greenTime = 4;
+      this.redLightState = null;
+      this.yellowLightState = null;
+      this.greenLightState = null;
+      this.isRunning = false;
+      this.setShutdownState();
+    }
+
+    getModelState() {
+      return {
+        red: this.redLightState,
+        yellow: this.yellowLightState,
+        green: this.greenLightState
+      };
+    }
+
+    setShutdownState() {
+      this.redLightState = false;
+      this.yellowLightState = false;
+      this.greenLightState = false;
+      this.dispatchEvent(new CustomEvent('changed'));
+    }
+
+    setRedToGreenTransitionState() {
+      this.redLightState = true;
+      this.yellowLightState = true;
+      this.greenLightState = false;
+      this.dispatchEvent(new CustomEvent('changed'));
+    }
+
+    setGreenLightState() {
+      this.redLightState = false;
+      this.yellowLightState = false;
+      this.greenLightState = true;
+      this.dispatchEvent(new CustomEvent('changed'));
+    }
+
+    setRedLightState() {
+      this.redLightState = true;
+      this.yellowLightState = false;
+      this.greenLightState = false;
+      this.dispatchEvent(new CustomEvent('changed'));
+    }
+
+    setGreenToRedTransitionState() {
+      this.redLightState = false;
+      this.yellowLightState = true;
+      this.greenLightState = true;
+      this.dispatchEvent(new CustomEvent('changed'));
+    }
+
+    onTickEventHandler(event) {
+      this.timer++;
+
+      if (this.timer >= 0 && this.timer < this.redTime) {
+        this.setRedLightState();
+      } else if (this.timer < this.redTime + this.transitionTime) {
+        this.setRedToGreenTransitionState();
+      } else if (this.timer < this.redTime + this.transitionTime + this.greenTime) {
+        this.setGreenLightState();
+      } else if (this.timer <= this.redTime + 2 * this.transitionTime + this.greenTime) {
+        this.setGreenToRedTransitionState();
+      }
+
+      if (this.timer > this.redTime + 2 * this.transitionTime + this.greenTime) {
+        this.timer = 0;
+      }
+    }
+
+    run() {
+      if (!this.isRunning) {
+        this.worker = new Worker("timer.js");
+        this.worker.addEventListener('message', this.onTickEventHandler.bind(this));
+        this.isRunning = true;
+      }
+    }
+
+    shutdown() {
+      if (this.isRunning) {
+        this.worker.terminate();
+        this.setShutdownState();
+        this.isRunning = false;
+      }
+    }
+  }
+
+  class Circle {
+    constructor(ctx, canvasWidth) {
+      this.ctx = ctx;
+      this.x = 0;
+      this.y = 75;
+      this.radius = 20;
+      this.speed = 2;
+      this.canvasWidth = canvasWidth;
+    }
+
+    move() {
+      this.x += this.speed;
+      if (this.x - this.radius > this.canvasWidth) {
+        this.x = -this.radius;
+      }
+    }
+
+    draw() {
+      this.ctx.clearRect(0, 0, this.canvasWidth, 150);
+      this.ctx.beginPath();
+      this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      this.ctx.fillStyle = "blue";
+      this.ctx.fill();
+      this.ctx.stroke();
+    }
+  }
+
+  function main() {
+    const semaphore = new SemaphoreModel();
+    const view = new SemaphoreView(semaphore);
+
+    document.getElementById('on').onclick = () => semaphore.run();
+    document.getElementById('off').onclick = () => semaphore.shutdown();
+
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+    const circle = new Circle(ctx, canvas.width);
+
+    function animate() {
+      const state = semaphore.getModelState();
+      if (state.green) {
+        circle.move();
+      }
+      circle.draw();
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  }
+
+  window.onload = main;
+</script>
+</body>
+</html>
