@@ -1,7 +1,0 @@
-Objeto : Impresora 
-
-Propiedades/Atributos:
-
-Nombre               | Tipo de dato |Cte/variable |Rango de valores posibles |f(c)
--Marca                string        constante                         
--Modelo               string        constante                               
