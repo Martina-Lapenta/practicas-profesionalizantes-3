@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Rociador</title>
+</head>
+
+<body>
+  
+</body>
+
+<script type="text/javascript">
+
+class Rociador
+{
+    constructor() //asi se escribe el constructor en javascript 
+    {
+        //estado inicial
+        this._capacidad = 750.0; //definimos los valores iniciales del objeto 
+        this._volumen = 0;
+        this._volumenExpulsadoAlRociar= 10;
+    }
+    
+    get volumen()
+    {
+        return this._volumen;
+    }
+
+    set volumen(valor)
+    {
+        if (valor <= this._capacidad && valor >= 0)
+        {
+            this._volumen = valor;
+        }
+        else 
+        {
+            console.log ('volumen ...')
+        }
+    }
+
+    get capacidad() // solo get porque es constante 
+    {
+        return this._capacidad;
+    }
+
+}
+
+    cargar ( valor >=0 )
+    {
+        let available = this._capacidad - this.volumen;
+        if (valor <= available )
+        {
+            this.volumen += valor;
+        }
+        else if (valor > available)
+        { 
+            this.volumen = this._capacidad;
+        }
+    
+        else
+        {
+            console.log ('valor');
+        }
+    }
+
+    rociar ()
+    {
+        if( this._volumen > 0)
+        {
+            if (this._volumen >= this._volumenExpulsadoAlRociar)
+            {
+            this_volumen -= this._volumenExpulsadoAlRociar;
+            }
+        }
+    }
+
+    vaciar ()
+    {
+        this._volumen= 0;
+    }
+
+
+
+
+</script>
+</html>

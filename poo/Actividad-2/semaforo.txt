@@ -1,0 +1,12 @@
+Objeto : Impresora 
+
+Propiedades/Atributos:
+
+Nombre               | Tipo de dato |Cte/variable |Rango de valores posibles                                 |f(c)
+-colorActual             string      variable      "rojo", "rojo_amarillo", "verde", "amarillo_verde"
+-estadosPosibles        array       constante      ["rojo", "rojo_amarillo", "verde", "amarillo_verde"]      cambiarColor() 
+
+Comportamiento:
+Nombre               | Parámetro / Tipo           |Retorno
+cambiarColor                   -                    
+actualizarVista                -

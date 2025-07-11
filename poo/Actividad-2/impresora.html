@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Impresora</title>
+</head>
+
+<body>
+  
+</body>
+
+<script type="text/javascript">
+
+class Impresora
+{
+    constructor ()
+    {
+        //estado inicial 
+    
+        //variable get y set
+        this._estado = "apagada";
+        this._nivelDeTinta = 100.0;
+    }
+
+  
+    get estado()
+    {
+        return this._estado;
+    }
+
+    set estado(nuevoEstado)
+    {
+        this._estado = nuevoEstado;
+    }
+
+    get nivelDeTinta()
+    {
+        return this._nivelDeTinta;
+    }
+
+    set nivelDeTinta(valor)
+    {
+        if (valor>= 0 && valor <= 100)
+        { 
+            this._nivelDeTinta = valor;
+        }
+        else 
+        {
+            console.log("nivel de tinta inválido");
+        }
+    }
+    
+
+
+    imprimir(documento) {
+            if (this._estado !== "encendida") {
+                console.log("La impresora está apagada.");
+                return;
+            }
+
+            if (this._nivelDeTinta <= 0) {
+                console.log("No hay suficiente tinta.");
+                return;
+            }
+
+            console.log("Imprimiendo documento: " + documento);
+            this._nivelDeTinta -= 10;
+            if (this._nivelDeTinta < 0) {
+                this._nivelDeTinta = 0;
+            }
+
+            this._estado = "imprimiendo";
+        }
+    
+
+    
+    escanear(documento) 
+    {
+        if (this._estado === "encendida") 
+        {
+            console.log(`Escaneando documento: ${documento}`);
+        } 
+        else {
+            console.log("No se puede escanear: la impresora está apagada.");
+        }
+    }
+
+    encender()
+    {
+        this._estado = "encendida";
+        console.log  ("Impresora encendida.");
+    
+    }
+
+    apagar ()
+    {
+        this._estado = "apagada";
+        console.log ("impresora apagada");
+    }
+
+    cancelar() 
+    {
+        if (this._estado === "imprimiendo") {
+            this._estado = "encendida";
+            console.log("Impresión cancelada.");
+        } else {
+            console.log("No hay tarea en curso para cancelar.");
+        }
+    }
+}
+</script>
+</html>
