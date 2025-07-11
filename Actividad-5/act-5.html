@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Figuras en Canvas</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+<script type="text/javascript">
+class ApplicationUI extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: 'closed' });
+
+    const style = document.createElement('style');
+    style.textContent = `
+      :host {
+        display: flex;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+      }
+      .sidebar {
+        width: 200px;
+        background-color: #f0f0f0;
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border-right: 1px solid #ccc;
+      }
+      .sidebar button {
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .sidebar input[type="color"] {
+        width: 100%;
+        height: 40px;
+        border: none;
+        cursor: pointer;
+      }
+      .canvas-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #ffffff;
+        border-right: 1px solid #ccc;
+      }
+      canvas {
+        border: 1px solid #000;
+        width: 600px;
+        height: 400px;
+        background-color: #eee;
+      }
+      .table-panel {
+        width: 300px;
+        padding: 20px;
+        box-sizing: border-box;
+        background-color: #fafafa;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        padding: 8px;
+        border: 1px solid #ccc;
+        text-align: left;
+      }
+      th {
+        background-color: #ddd;
+      }
+    `;
+
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flex = '1';
+
+    const sidebar = document.createElement('div');
+    sidebar.className = 'sidebar';
+
+    this.btnRect = document.createElement('button');
+    this.btnRect.textContent = 'Crear rectángulo';
+
+    this.btnCircle = document.createElement('button');
+    this.btnCircle.textContent = 'Crear círculo';
+
+    this.btnTriangle = document.createElement('button');
+    this.btnTriangle.textContent = 'Crear triángulo';
+
+    const colorLabel = document.createElement('label');
+    colorLabel.setAttribute('for', 'colorPicker');
+    colorLabel.textContent = 'Color:';
+
+    this.colorInput = document.createElement('input');
+    this.colorInput.type = 'color';
+    this.colorInput.id = 'colorPicker';
+    this.colorInput.name = 'colorPicker';
+
+    sidebar.appendChild(this.btnRect);
+    sidebar.appendChild(this.btnCircle);
+    sidebar.appendChild(this.btnTriangle);
+    sidebar.appendChild(colorLabel);
+    sidebar.appendChild(this.colorInput);
+
+    const canvasContainer = document.createElement('div');
+    canvasContainer.className = 'canvas-container';
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = 600;
+    this.canvas.height = 400;
+    canvasContainer.appendChild(this.canvas);
+
+    const tablePanel = document.createElement('div');
+    tablePanel.className = 'table-panel';
+
+    this.table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const trHead = document.createElement('tr');
+    trHead.innerHTML = `
+      <th>ID</th>
+      <th>Tipo</th>
+      <th>Seleccionar</th>
+    `;
+    thead.appendChild(trHead);
+    this.table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    this.table.appendChild(tbody);
+
+    this.selectionLabel = document.createElement('div');
+    this.selectionLabel.textContent = 'Figura seleccionada: ninguna';
+    this.selectionLabel.style.marginTop = '10px';
+
+    tablePanel.appendChild(this.table);
+    tablePanel.appendChild(this.selectionLabel);
+
+    container.appendChild(sidebar);
+    container.appendChild(canvasContainer);
+    container.appendChild(tablePanel);
+
+    shadow.appendChild(style);
+    shadow.appendChild(container);
+
+    this.btnRect.onclick = () => {
+      this.dispatchEvent(new CustomEvent('createRectangleRequest'));
+    };
+    this.btnCircle.onclick = () => {
+      this.dispatchEvent(new CustomEvent('createCircleRequest'));
+    };
+    this.btnTriangle.onclick = () => {
+      this.dispatchEvent(new CustomEvent('createTriangleRequest'));
+    };
+  }
+
+  static getDispatchedEvents() {
+    return ['createRectangleRequest', 'createCircleRequest', 'createTriangleRequest'];
+  }
+
+  getDrawingContext2D() {
+    return this.canvas.getContext('2d');
+  }
+
+  getFormData() {
+    return {
+      color: this.colorInput.value
+    };
+  }
+
+  addTableEntry(id, tipo) {
+    const tbody = this.table.querySelector('tbody');
+    const row = document.createElement('tr');
+
+    const tdId = document.createElement('td');
+    tdId.textContent = id;
+
+    const tdTipo = document.createElement('td');
+    tdTipo.textContent = tipo;
+
+    const tdRadio = document.createElement('td');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'figuraSeleccionada';
+    radio.dataset.id = id;
+
+    tdRadio.appendChild(radio);
+    row.appendChild(tdId);
+    row.appendChild(tdTipo);
+    row.appendChild(tdRadio);
+
+    tbody.appendChild(row);
+  }
+
+  setSelectedFigure(id) {
+    this.selectionLabel.textContent = `Figura seleccionada: ${id}`;
+  }
+
+  getTableElement() {
+    return this.table;
+  }
+}
+
+customElements.define('applicationui-wc', ApplicationUI);
+
+class ApplicationModel extends EventTarget {
+  constructor() {
+    super();
+    this.objects = new Map();
+  }
+
+  addObject(id, object) {
+    this.objects.set(id, object);
+    this.dispatchEvent(new CustomEvent('modelchanged'));
+  }
+
+  getObject(id) {
+    return this.objects.get(id);
+  }
+
+  getObjectIterator() {
+    return this.objects.values();
+  }
+}
+
+class Rectangle {
+  constructor(x, y, w, h, color) {
+    this.x = Number(x);
+    this.y = Number(y);
+    this.width = Number(w);
+    this.height = Number(h);
+    this.color = color;
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.restore();
+  }
+}
+
+class Circle {
+  constructor(x, y, radius, color) {
+    this.x = Number(x);
+    this.y = Number(y);
+    this.radius = Number(radius);
+    this.color = color;
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.fillStyle = this.color;
+    ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+class Triangle {
+  constructor(x, y, side, color) {
+    this.x = Number(x);
+    this.y = Number(y);
+    this.side = Number(side);
+    this.color = color;
+  }
+
+  draw(ctx) {
+    const height = (this.side * Math.sqrt(3)) / 2;
+    ctx.save();
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - height / 2);
+    ctx.lineTo(this.x - this.side / 2, this.y + height / 2);
+    ctx.lineTo(this.x + this.side / 2, this.y + height / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+class ApplicationController {
+  constructor(view, model) {
+    this.view = view;
+    this.model = model;
+    this.ctx = this.view.getDrawingContext2D();
+    this.selectedId = null;
+  }
+
+  init() {
+    this.model.addEventListener('modelchanged', this.onModelChanged.bind(this));
+    this.view.addEventListener('createRectangleRequest', this.onCreateRectangle.bind(this));
+    this.view.addEventListener('createCircleRequest', this.onCreateCircle.bind(this));
+    this.view.addEventListener('createTriangleRequest', this.onCreateTriangle.bind(this));
+
+    this.view.getTableElement().addEventListener('change', (e) => {
+      if (e.target.name === 'figuraSeleccionada') {
+        this.selectedId = e.target.dataset.id;
+        this.view.setSelectedFigure(this.selectedId);
+      }
+    });
+
+    document.addEventListener('keydown', this.onKeyDown.bind(this));
+  }
+
+  onModelChanged() {
+    this.ctx.clearRect(0, 0, 600, 400);
+    for (let obj of this.model.getObjectIterator()) {
+      obj.draw(this.ctx);
+    }
+  }
+
+  onCreateRectangle() {
+    const id = prompt('ID:');
+    const w = prompt('Ancho:');
+    const h = prompt('Alto:');
+    const x = prompt('Coordenada X:');
+    const y = prompt('Coordenada Y:');
+    const color = this.view.getFormData().color;
+
+    const rect = new Rectangle(x, y, w, h, color);
+    this.model.addObject(id, rect);
+    this.view.addTableEntry(id, 'Rectángulo');
+  }
+
+  onCreateCircle() {
+    const id = prompt('ID:');
+    const r = prompt('Radio:');
+    const x = prompt('Coordenada X:');
+    const y = prompt('Coordenada Y:');
+    const color = this.view.getFormData().color;
+
+    const circle = new Circle(x, y, r, color);
+    this.model.addObject(id, circle);
+    this.view.addTableEntry(id, 'Círculo');
+  }
+
+  onCreateTriangle() {
+    const id = prompt('ID:');
+    const side = prompt('Lado:');
+    const x = prompt('Coordenada X:');
+    const y = prompt('Coordenada Y:');
+    const color = this.view.getFormData().color;
+
+    const triangle = new Triangle(x, y, side, color);
+    this.model.addObject(id, triangle);
+    this.view.addTableEntry(id, 'Triángulo');
+  }
+
+  onKeyDown(e) {
+    if (!this.selectedId) return;
+
+    const obj = this.model.getObject(this.selectedId);
+    if (!obj) return;
+
+    const step = 10;
+
+    switch (e.key) {
+      case 'ArrowUp':
+        obj.y -= step;
+        break;
+      case 'ArrowDown':
+        obj.y += step;
+        break;
+      case 'ArrowLeft':
+        obj.x -= step;
+        break;
+      case 'ArrowRight':
+        obj.x += step;
+        break;
+    }
+
+    this.model.dispatchEvent(new CustomEvent('modelchanged'));
+  }
+}
+
+function main() {
+  const model = new ApplicationModel();
+  const ui = new ApplicationUI();
+  const controller = new ApplicationController(ui, model);
+  controller.init();
+  document.body.appendChild(ui);
+}
+
+window.onload = main;
+</script>
+
+</body>
+</html>

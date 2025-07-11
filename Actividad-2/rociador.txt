@@ -1,0 +1,14 @@
+Objeto : Rociador 
+
+Propiedades/Atributos:
+
+Nombre               | Tipo de dato |Cte/variable |Rango de valores posibles |f(c)
+-CapacidadEnMl         double        constante     750.0                      --
+-Volumen               double        variable      0                          rociar, cargar, vaciar
+-VolumenExpulsadoAlRociar 
+
+Comportamiento:
+Nombre               | Parámetro / Tipo           |Retorno
+rociar                 --                          --
+cargar                % de carga:double            -- 
+vaciar                 --                          -- 

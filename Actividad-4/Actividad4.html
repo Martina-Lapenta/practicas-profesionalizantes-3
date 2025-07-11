@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Actividad 4 - Auto controlado con Canvas</title>
+  <style>
+    body {
+      width: 50%;
+      height: 50%;
+      border: 2px solid black;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+<script>
+// Clase que representa un rectángulo
+class Rectangle {
+  constructor(x, y, width, height) {
+    this.x = x;                
+    this.y = y;               
+    this.width = width;       
+    this.height = height;      
+    this.angle = 0;            
+    this.speed = 2;            
+  }
+
+  // Gira el rectángulo
+  rotate(delta) {
+    this.angle += delta;
+  }
+
+  // Avanza en la dirección que está mirando
+  moveForward() {
+    this.x += this.speed * Math.cos(this.angle);
+    this.y += this.speed * Math.sin(this.angle);
+  }
+
+  // Retrocede en la dirección opuesta
+  moveBackward() {
+    this.x -= this.speed * Math.cos(this.angle);
+    this.y -= this.speed * Math.sin(this.angle);
+  }
+
+  // Dibuja el rectángulo en pantalla
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+    ctx.restore();
+  }
+}
+
+// Clase que controla al rectángulo mediante teclado
+class RectangleController {
+  constructor(rectangle) {
+    this.rectangle = rectangle;
+    this.keys = new Set();
+
+    // Registrar teclas presionadas
+    window.addEventListener('keydown', (e) => this.keys.add(e.key));
+    window.addEventListener('keyup', (e) => this.keys.delete(e.key));
+  }
+
+  // Actualiza el movimiento según teclas activas
+  update() {
+    if (this.keys.has("ArrowUp")) {
+      this.rectangle.moveForward();
+    }
+    if (this.keys.has("ArrowDown")) {
+      this.rectangle.moveBackward();
+    }
+    if (this.keys.has("ArrowLeft")) {
+      this.rectangle.rotate(-0.05);
+    }
+    if (this.keys.has("ArrowRight")) {
+      this.rectangle.rotate(0.05);
+    }
+  }
+}
+
+// Motor gráfico que maneja el canvas y los objetos
+class GameEngineRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.objects = new Map();
+  }
+
+  addObject(id, object) {
+    this.objects.set(id, object);
+  }
+
+  render() {
+    // Limpia el canvas
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // Dibuja todos los objetos
+    for (const obj of this.objects.values()) {
+      obj.draw(this.ctx);
+    }
+  }
+}
+
+// Función principal
+function main() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 400;
+  document.body.appendChild(canvas);
+
+  const renderer = new GameEngineRenderer(canvas);
+  const auto = new Rectangle(200, 200, 100, 50); 
+  const controller = new RectangleController(auto);
+
+  renderer.addObject('auto', auto);
+
+  setInterval(() => {
+    controller.update();      
+    renderer.render();        
+  }, 16); 
+}
+
+window.onload = main;
+</script>
+</body>
+</html>
